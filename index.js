@@ -1,11 +1,12 @@
-import express from "express"
-import cors from "cors"
-import registros from "./registros.js"
+import express from "express";
+import cors from "cors";
+import registros from "./registros.js";
 import plantas from "./plantas.js";
 import { conectarDB } from "./db.js";
-import {rateLimit} from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
+import getWeather from "./weather.js";
 
-const app = express()
+const app = express();
 const port = 3000;
 
 const dailyLimiter = rateLimit({
@@ -23,11 +24,21 @@ app.use(express.json());
 app.use(cors());
 app.use(dailyLimiter);
 
+app.get('/clima', async (req, res) => {
+  try {
+    const city = req.query.city || 'La Rioja';
+    const weatherData = await getWeather(city);
+    res.json(weatherData);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener los datos climáticos' });
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("Hola mundo!");
 });
 
-app.use("/", plantas)
+app.use("/", plantas);
 
 app.use("/", registros);
 
